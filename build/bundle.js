@@ -51,11 +51,6 @@
 	  city: ""
 	}
 	
-	var click = document.getElementById( 'click' )
-	var form = document.getElementById( 'city-form' );
-	var city = document.getElementById( 'city' )
-	
-	
 	var capitalize = function( string ) {
 	  return string.charAt(0).toUpperCase() + string.slice(1);
 	}
@@ -85,6 +80,9 @@
 	    console.log( allFlights )
 	  }
 	
+	  var click = document.getElementById( 'click' )
+	  var form = document.getElementById( 'city-form' );
+	  var city = document.getElementById( 'city' )
 	
 	  click.onclick = function( event ) {
 	    flightsearch.getCode( capitalize(city.value) )
@@ -106,6 +104,19 @@
 	  form.onsubmit = function( event ) {
 	    event.preventDefault();
 	    flightsearch.getCode( capitalize(city.value) )
+	    var code = flightsearch.airport
+	    console.log( code )
+	
+	     var  url = "http://partners.api.skyscanner.net/apiservices/browsedates/v1.0/GB/GBP/en-GB/EDI/" + code + "/2016-09-05/2016-09-07?apiKey=eu863416336220144245856861714199"
+	     var request = new XMLHttpRequest();
+	     request.open("GET", url);
+	     request.send(null);
+	
+	     request.onload = function(){
+	      var response = request.responseText
+	      var flights = JSON.parse( response )
+	      console.log( flights )
+	    }
 	  }
 	}
 	
