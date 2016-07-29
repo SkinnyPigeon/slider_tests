@@ -2,7 +2,7 @@ var Flights = require( './flights' )
 
 var state = {
   cost: 200,
-  city: ""
+  flight: ""
 }
 
 var capitalize = function( string ) {
@@ -12,14 +12,14 @@ var capitalize = function( string ) {
 window.onload = function(){
   var flightsearch
   var slider = document.getElementById( 'slider' );
-  var here = document.getElementById( 'here' );
+  var budget = document.getElementById( 'budget' );
   var p = document.createElement( 'p' )
   p.innerHTML = 200
-  here.appendChild( p )
+  budget.appendChild( p )
 
   slider.onchange = function() {
     state.cost = slider.value
-    display();
+    displayBudget();
   }
 
   var  url = "http://partners.api.skyscanner.net/apiservices/browseroutes/v1.0/GB/GBP/en-GB/EDI/anywhere/anytime/anytime?apiKey=eu863416336220144245856861714199"
@@ -52,6 +52,8 @@ window.onload = function(){
       var response = request.responseText
       var flights = JSON.parse( response )
       console.log( flights )
+      state.flight = flights
+      displayFlights();
     }
 
   }
@@ -70,16 +72,28 @@ window.onload = function(){
       var response = request.responseText
       var flights = JSON.parse( response )
       console.log( flights )
+      state.flight = flights
+      displayFlights();
     }
   }
 }
 
-var display = function() {
-  var here = document.getElementById( 'here' );
-  here.innerHTML = ""
+
+var displayFlights = function() {
+  var flight = document.getElementById( 'flight' );
+  flight.innerHTML = ""
+  var p = document.createElement( 'p' );
+  p.innerHTML = "Cost: £" + state.flight.Quotes[0].MinPrice
+  flight.appendChild( p )
+}
+
+
+var displayBudget = function() {
+  var budget = document.getElementById( 'budget' );
+  budget.innerHTML = ""
   var p = document.createElement( 'p' )
-  p.innerHTML = state.cost
-  here.appendChild( p )
+  p.innerHTML = state.budget
+  budget.appendChild( p )
 }
 
 
