@@ -45,10 +45,14 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var Flights = __webpack_require__( 1 )
+	var Hotels = __webpack_require__( 3 )
+	var DisplayFlights = __webpack_require__( 2)
+	var HotelView = __webpack_require__( 4 )
 	
 	var state = {
 	  cost: 200,
-	  flight: ""
+	  flight: "",
+	  budget: 0
 	}
 	
 	var capitalize = function( string ) {
@@ -68,17 +72,19 @@
 	    displayBudget();
 	  }
 	
-	  var  url = "http://partners.api.skyscanner.net/apiservices/browseroutes/v1.0/GB/GBP/en-GB/EDI/anywhere/anytime/anytime?apiKey=eu863416336220144245856861714199"
-	  var request = new XMLHttpRequest();
-	  request.open("GET", url);
-	  request.send(null);
+	  var  flightUrl = "http://partners.api.skyscanner.net/apiservices/browseroutes/v1.0/GB/GBP/en-GB/EDI/anywhere/anytime/anytime?apiKey=eu863416336220144245856861714199"
+	  var flightsRequest = new XMLHttpRequest();
+	  flightsRequest.open( "GET", flightUrl );
+	  flightsRequest.send( null );
 	
-	  request.onload = function(){
-	    var response = request.responseText
-	    var allFlights = JSON.parse( response )
+	  flightsRequest.onload = function() {
+	    var flightResponse = flightsRequest.responseText
+	    var allFlights = JSON.parse( flightResponse )
 	    flightsearch = new Flights( allFlights )
 	    console.log( allFlights )
 	  }
+	
+	
 	
 	  var click = document.getElementById( 'click' )
 	  var form = document.getElementById( 'city-form' );
@@ -89,49 +95,64 @@
 	    var code = flightsearch.airport
 	    console.log( code )
 	
-	     var  url = "http://partners.api.skyscanner.net/apiservices/browsedates/v1.0/GB/GBP/en-GB/EDI/" + code + "/2016-09-05/2016-09-07?apiKey=eu863416336220144245856861714199"
-	     var request = new XMLHttpRequest();
-	     request.open("GET", url);
-	     request.send(null);
+	    var  url = "http://partners.api.skyscanner.net/apiservices/browsedates/v1.0/GB/GBP/en-GB/EDI/" + code + "/2016-09-05/2016-09-07?apiKey=eu863416336220144245856861714199"
+	    var request = new XMLHttpRequest();
+	    request.open("GET", url);
+	    request.send(null);
 	
-	     request.onload = function(){
+	    request.onload = function(){
 	      var response = request.responseText
 	      var flights = JSON.parse( response )
 	      console.log( flights )
 	      state.flight = flights
-	      displayFlights();
-	    }
+	      var displayFlights = new DisplayFlights( state.flight )
+	      updateBudget();
+	      console.log( state.budget )
 	
+	      var hotelUrl = "http://terminal2.expedia.com/x/mhotels/search?city=" + city.value.toUpperCase() + "&checkInDate=2016-12-01&checkOutDate=2016-12-03&room1=2&apikey=a7zmRxiJIznimU5WOlHpTRjDAOFZsrga";
+	      var hotelsRequest = new XMLHttpRequest();
+	      hotelsRequest.open( "GET", hotelUrl )
+	      hotelsRequest.send( null );
+	
+	      hotelsRequest.onload = function() {
+	        var hotelResponse = hotelsRequest.responseText;
+	        var allHotels = JSON.parse( hotelResponse );
+	        hotelSearch = new Hotels( allHotels )
+	        // console.log( allHotels )
+	        hotelSearch.sort( state.budget )
+	        // console.log( hotelSearch.budgetHotels )
+	        displayHotel = new HotelView( hotelSearch.budgetHotels )
+	      }
+	    } 
 	  }
+	
+	
+	
 	  form.onsubmit = function( event ) {
 	    event.preventDefault();
 	    flightsearch.getCode( capitalize(city.value) )
 	    var code = flightsearch.airport
 	    console.log( code )
 	
-	     var  url = "http://partners.api.skyscanner.net/apiservices/browsedates/v1.0/GB/GBP/en-GB/EDI/" + code + "/2016-09-05/2016-09-07?apiKey=eu863416336220144245856861714199"
-	     var request = new XMLHttpRequest();
-	     request.open("GET", url);
-	     request.send(null);
+	    var  url = "http://partners.api.skyscanner.net/apiservices/browsedates/v1.0/GB/GBP/en-GB/EDI/" + code + "/2016-09-05/2016-09-07?apiKey=eu863416336220144245856861714199"
+	    var request = new XMLHttpRequest();
+	    request.open("GET", url);
+	    request.send(null);
 	
-	     request.onload = function(){
+	    request.onload = function(){
 	      var response = request.responseText
 	      var flights = JSON.parse( response )
 	      console.log( flights )
 	      state.flight = flights
-	      displayFlights();
+	      var displayFlights = new DisplayFlights( state.flight )
+	      updateBudget();
+	      console.log( state.budget )
 	    }
 	  }
 	}
 	
 	
-	var displayFlights = function() {
-	  var flight = document.getElementById( 'flight' );
-	  flight.innerHTML = ""
-	  var p = document.createElement( 'p' );
-	  p.innerHTML = "Cost: £" + state.flight.Quotes[0].MinPrice
-	  flight.appendChild( p )
-	}
+	
 	
 	
 	var displayBudget = function() {
@@ -140,6 +161,10 @@
 	  var p = document.createElement( 'p' )
 	  p.innerHTML = state.budget
 	  budget.appendChild( p )
+	}
+	
+	var updateBudget = function() {
+	  state.budget = state.cost - state.flight.Quotes[0].MinPrice
 	}
 	
 	
@@ -179,6 +204,58 @@
 	
 	
 	module.exports = Flights;
+
+/***/ },
+/* 2 */
+/***/ function(module, exports) {
+
+	var DisplayFlights = function( savedFlight ) {
+	  var flight = document.getElementById( 'flight' );
+	  flight.innerHTML = ""
+	  var p = document.createElement( 'p' );
+	  p.innerHTML = "Cost: £" + savedFlight.Quotes[0].MinPrice
+	  flight.appendChild( p )
+	}
+	
+	module.exports = DisplayFlights;
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	var Hotels = function( list ) {
+	  this.list = list;
+	  this.budgetHotels = [];
+	}
+	
+	Hotels.prototype = {
+	  sort: function( budget ) {
+	    this.list.hotelList.forEach( function( hotel, index ) {
+	      if( hotel.lowRate <= budget ) {
+	        this.budgetHotels.push( hotel )
+	      }
+	    }.bind( this ))
+	  }
+	}
+	
+	module.exports = Hotels;
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+	var HotelView = function( hotels ) {
+	  console.log( hotels )
+	  var hotel = document.getElementById( 'hotels' );
+	  hotel.innerHTML = "" 
+	  hotels.forEach( function(disHotel, index ) {
+	    var p = document.createElement( 'p' );
+	    p.innerHTML = "Name: " + disHotel.localizedName + " Cost: £" + disHotel.lowRate
+	    hotel.appendChild( p )
+	  })
+	}
+	
+	module.exports = HotelView;
 
 /***/ }
 /******/ ]);
